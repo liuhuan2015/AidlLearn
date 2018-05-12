@@ -104,14 +104,24 @@ IInterface代表的就是远程Server对象具有什么能力，具体来说，�
     public interface IService extends android.os.IInterface{
       ...
     }
-##### 3.java层的Binder类，代表的就是Binder本地对象。BinderProxy类是Binder类的一个内部类，它代表远程进程的Binder对象的本地代理。这两个类都继承自IBinder,因而都具有跨进程传输的能力；实际上，在跨越进程的时候，Binder驱动会自动完成这两个对象的转换。
+##### 3.java层的Binder类，代表的就是Binder本地对象。BinderProxy类是Binder类的一个内部类，它代表远程进程的Binder对象的本地代理。这两个类都继承自IBinder,因而都具有跨进程传输的能力；实际上，在跨越进程的时候，Binder驱动会自动完成这两个对象的转换。<br>
+
 ##### 4.在使用aidl的时候，编译工具会给我们生成一个Stub的静态内部类，这个类继承自Binder，说明它是一个Binder本地对象，它实现了IInterface接口，说明它具有远程Server承诺给Client的一些功能；Stub是一个抽象类，具体的IInterface的相关实现需要我们手动完成，使用了策略模式。
     
     public static abstract class Stub extends android.os.Binder implements com.liuh.aidllearn.IService{
       ...
     }
 #### 四、总结
-aidl的固定模式：一个需要跨进程传递的对象一定继承自IBinder，如果是Binder本地对象，那么一定继承Binder，实现IInterface，如果是代理对象，那么就实现了IInterface并持有IBinder引用。
+aidl的固定模式：一个需要跨进程传递的对象一定继承自IBinder，如果是Binder本地对象，那么一定继承Binder，实现IInterface，如果是代理对象，那么就实现了IInterface并持有IBinder引用。<br>
+Binder机制跨进程原理:<br>
+Binder跨进程传输并不是真的把一个对象传输到了另外一个进程；传输过程好像是Binder跨进程穿越的时候，它在一个进程留下了一个真身，在另外一个进程幻化出一个影子（这个影子可以很多个）；Client进程的操作其实是对于影子的操作，影子利用Binder驱动最终让真身完成操作。<br>
+Android系统实现这种机制使用的是代理模式, 对于Binder的访问，如果是在同一个进程（不需要跨进程），那么直接返回原始的Binder实体；如果在不同进程，那么就给他一个代理对象（影子）；我们在系统源码以及AIDL的生成代码里面可以看到很多这种实现。<br>
+一句话总结就是：Client进程只不过是持有了Server端的代理；代理对象协助驱动完成了跨进程通信。<br>
+最后附上两张图<br>
+![Binder通信模型](https://github.com/liuhuan2015/AidlLearn/blob/master/images/Binder%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%9E%8B.png)<br>
+
+![Binder通信机制](https://github.com/liuhuan2015/AidlLearn/blob/master/images/BInder%E9%80%9A%E4%BF%A1%E6%9C%BA%E5%88%B6.png)<br>
+
 
 
 
